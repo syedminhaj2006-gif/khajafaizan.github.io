@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Khaja Faizan — The Wild Card</title>
+<meta name="description" content="Khaja Faizan — CSE, AI & ML Engineering Student. Every system has a wild card.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================= TOKENS ============================= */
+:root{
+  --bg-0:#050505;
+  --bg-1:#0A0A0C;
+  --purple-deep:#3A124C;
+  --purple:#7A2EFF;
+  --green:#A8FF00;
+  --crimson:#C1121F;
+  --text-0:#F4F1EA;
+  --text-1:#88888F;
+  --border:rgba(255,255,255,0.12);
+  --display: "Anton", sans-serif;
+  --body: "Space Grotesk", sans-serif;
+  --mono: "JetBrains Mono", monospace;
+  --ease: cubic-bezier(.16,.84,.24,1);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{
+  background:var(--bg-0);
+  color:var(--text-0);
+  font-family:var(--body);
+  overflow-x:hidden;
+  width:100%;
+  height:100%;
+}
+body{ min-height:100vh; }
+::selection{ background:var(--purple); color:var(--text-0); }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+h1,h2,h3{ font-family:var(--display); font-weight:400; letter-spacing:0.01em; line-height:0.95; }
+
+/* focus visibility */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--green);
+  outline-offset:3px;
+}
+
+/* scrollbar minimal */
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-thumb{ background:var(--purple-deep); border-radius:4px; }
+
+/* ============================= LAYERS ============================= */
+#bg-canvas{
+  position:fixed; inset:0; z-index:0;
+  width:100%; height:100%;
+  pointer-events:none;
+}
+.noise-overlay{
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  opacity:0.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.vignette{
+  position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%);
+}
+
+/* HAHAHAHAHA floating typography motif (ambient, sparse) */
+.haha-field{ position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; opacity:0; transition:opacity 1.2s var(--ease); }
+.haha-field.show{ opacity:1; }
+.haha-field span{
+  position:absolute; font-family:var(--display); color:transparent;
+  -webkit-text-stroke:1px rgba(122,46,255,0.18);
+  white-space:nowrap; user-select:none;
+}
+
+/* Dramatic full-screen HAHAHA burst (used at transitions) */
+#haha-burst{
+  position:fixed; inset:0; z-index:60; pointer-events:none;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; gap:0.4rem;
+  opacity:0; visibility:hidden;
+}
+#haha-burst.active{ opacity:1; visibility:visible; transition:opacity .18s ease; }
+#haha-burst .line1{
+  font-family:var(--display); font-size:clamp(2.5rem,10vw,7rem); color:var(--green);
+  letter-spacing:0.02em; text-shadow:0 0 40px rgba(168,255,0,0.35);
+}
+#haha-burst .line2{
+  font-family:var(--mono); font-size:clamp(0.9rem,2.2vw,1.4rem); color:var(--text-0);
+  letter-spacing:0.25em; text-transform:uppercase; margin-top:0.5rem;
+}
+
+/* ============================= BOOT SEQUENCE ============================= */
+#boot{
+  position:fixed; inset:0; z-index:100; background:var(--bg-0);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  flex-direction:column; gap:1.5rem;
+  transition:opacity .9s var(--ease), visibility .9s var(--ease);
+}
+#boot.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+.boot-step{ display:none; flex-direction:column; align-items:center; gap:1.2rem; }
+.boot-step.active{ display:flex; }
+#boot .system-line{
+  font-family:var(--mono); font-size:clamp(0.85rem,2vw,1.1rem);
+  letter-spacing:0.35em; text-transform:uppercase; color:var(--text-1);
+  opacity:0; animation:typeIn 1.4s var(--ease) forwards;
+}
+@keyframes typeIn{ from{opacity:0; letter-spacing:0.7em;} to{opacity:1; letter-spacing:0.35em;} }
+
+#boot .laugh{
+  font-family:var(--display); font-size:clamp(1.6rem,7vw,4.5rem); color:var(--purple);
+  letter-spacing:0.03em; filter:blur(0px);
+  animation:laughDistort 1.6s var(--ease) forwards;
+}
+@keyframes laughDistort{
+  0%{ opacity:0; transform:scale(0.9) skewX(0deg); filter:blur(6px);}
+  35%{ opacity:1; transform:scale(1.02) skewX(-3deg); filter:blur(0px);}
+  70%{ transform:scale(1) skewX(2deg) translateX(4px); }
+  100%{ opacity:0; transform:scale(1.15) skewX(-6deg) translateX(-10px); filter:blur(10px);}
+}
+
+.pick-card-wrap{ perspective:1400px; }
+#pick-card{
+  width:min(78vw,240px); aspect-ratio:5/7;
+  border-radius:14px; border:1px solid var(--border);
+  background:linear-gradient(155deg, var(--bg-1), #14071c 65%, var(--purple-deep));
+  display:flex; align-items:center; justify-content:center; text-align:center; padding:1.4rem;
+  position:relative; cursor:pointer;
+  box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(168,255,0,0.04) inset;
+  transform-style:preserve-3d;
+  transition:transform .6s var(--ease);
+  animation:cardFloat 4s ease-in-out infinite;
+}
+@keyframes cardFloat{ 0%,100%{ transform:translateY(0) rotateZ(-1.5deg);} 50%{ transform:translateY(-10px) rotateZ(1.5deg);} }
+#pick-card:hover{ animation-play-state:paused; }
+#pick-card .pick-label{
+  font-family:var(--display); font-size:clamp(1.1rem,4vw,1.6rem); letter-spacing:0.06em;
+  color:var(--text-0);
+}
+#pick-card .corner{
+  position:absolute; font-family:var(--mono); font-size:0.75rem; color:var(--green); opacity:0.8;
+}
+#pick-card .corner.tl{ top:0.8rem; left:0.9rem; }
+#pick-card .corner.br{ bottom:0.8rem; right:0.9rem; transform:rotate(180deg); }
+#pick-card.flipped{ transform:rotateY(180deg); animation:none; }
+
+.reveal-back{
+  position:absolute; inset:0; border-radius:14px; backface-visibility:hidden; transform:rotateY(180deg);
+  background:radial-gradient(circle at 30% 20%, rgba(122,46,255,0.35), transparent 55%), var(--bg-1);
+  border:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.3rem; padding:1rem;
+}
+#pick-card .front-face{ backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; gap:0.6rem; }
+
+.identity-reveal{ display:none; flex-direction:column; align-items:center; gap:1.6rem; text-align:center; }
+.identity-reveal.show{ display:flex; }
+.identity-reveal h1{
+  font-size:clamp(2.6rem,11vw,6.5rem); color:var(--text-0);
+}
+.identity-reveal h1 em{ color:var(--green); font-style:normal; }
+.identity-meta{
+  font-family:var(--mono); font-size:0.8rem; letter-spacing:0.2em; color:var(--text-1);
+  display:flex; gap:1.2rem; flex-wrap:wrap; justify-content:center; text-transform:uppercase;
+}
+.identity-meta span{ position:relative; }
+.identity-meta span:not(:last-child)::after{ content:'/'; position:absolute; right:-0.7rem; color:var(--purple); }
+
+.enter-btn{
+  margin-top:0.6rem; padding:0.95rem 2.4rem; border:1px solid var(--green); border-radius:999px;
+  color:var(--green); font-family:var(--mono); letter-spacing:0.2em; font-size:0.8rem; text-transform:uppercase;
+  transition:background .35s var(--ease), color .35s var(--ease), transform .2s var(--ease);
+  position:relative; overflow:hidden;
+}
+.enter-btn:hover{ background:var(--green); color:#050505; transform:translateY(-2px); }
+
+.skip-boot{
+  position:fixed; bottom:1.4rem; right:1.4rem; z-index:101; font-family:var(--mono); font-size:0.7rem;
+  color:var(--text-1); letter-spacing:0.15em; opacity:0.6; text-transform:uppercase;
+}
+.skip-boot:hover{ opacity:1; color:var(--text-0); }
+
+/* ============================= HEADER ============================= */
+#site{ position:relative; z-index:5; opacity:0; transition:opacity .8s var(--ease); }
+#site.ready{ opacity:1; }
+
+header.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1.3rem clamp(1.2rem,4vw,3rem);
+  backdrop-filter:blur(6px);
+  background:linear-gradient(to bottom, rgba(5,5,5,0.75), transparent);
+}
+.brand{ font-family:var(--display); font-size:1.15rem; letter-spacing:0.03em; }
+.brand em{ color:var(--green); font-style:normal; }
+.tagline-small{
+  font-family:var(--mono); font-size:0.68rem; letter-spacing:0.14em; color:var(--text-1);
+  text-transform:uppercase; display:none;
+}
+@media(min-width:700px){ .tagline-small{ display:block; } }
+
+/* ============================= DECK / MAIN VIEW ============================= */
+main{ position:relative; z-index:5; min-height:100vh; }
+
+.deck-hero{
+  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:7rem 1.3rem 3rem; gap:1.6rem;
+}
+.deck-hero .eyebrow{
+  font-family:var(--mono); font-size:0.75rem; letter-spacing:0.3em; color:var(--purple); text-transform:uppercase;
+}
+.deck-hero h2{
+  font-size:clamp(2.4rem,8vw,5.4rem); max-width:16ch;
+}
+.deck-hero h2 .accent{ color:var(--green); }
+.deck-hero p.sub{
+  max-width:46ch; color:var(--text-1); font-size:1rem; line-height:1.6;
+}
+.scroll-hint{ font-family:var(--mono); font-size:0.7rem; color:var(--text-1); letter-spacing:0.2em; margin-top:2rem; animation:bob 2.4s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{transform:translateY(0);opacity:.5;} 50%{transform:translateY(6px);opacity:1;} }
+
+/* CARD GRID */
+.deck-wrap{ padding:2rem clamp(1rem,4vw,3rem) 8rem; }
+.deck-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+  gap:1.6rem; max-width:1200px; margin:0 auto;
+  perspective:1600px;
+}
+.pcard{
+  position:relative; aspect-ratio:5/7; border-radius:16px;
+  background:linear-gradient(160deg, var(--bg-1) 0%, #0d0510 55%, var(--purple-deep) 130%);
+  border:1px solid var(--border);
+  padding:1.4rem; display:flex; flex-direction:column; justify-content:space-between;
+  cursor:pointer; transform-style:preserve-3d; will-change:transform;
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease), border-color .35s var(--ease);
+  outline:none;
+}
+.pcard:hover, .pcard:focus-visible{
+  border-color:rgba(168,255,0,0.4);
+  box-shadow:0 25px 60px rgba(0,0,0,.55), 0 0 40px rgba(122,46,255,0.18);
+}
+.pcard .rank-row{ display:flex; justify-content:space-between; align-items:flex-start; font-family:var(--mono); }
+.pcard .suit{ font-size:1.6rem; line-height:1; }
+.pcard .suit.red{ color:var(--crimson); }
+.pcard .suit.green{ color:var(--green); }
+.pcard .suit.purple{ color:var(--purple); }
+.pcard .rank{ font-size:0.75rem; color:var(--text-1); letter-spacing:0.1em; }
+.pcard .center-glyph{ align-self:center; font-size:3rem; opacity:0.9; }
+.pcard .cardname{ font-family:var(--display); font-size:1.5rem; }
+.pcard .cardlabel{ font-family:var(--mono); font-size:0.7rem; letter-spacing:0.2em; color:var(--text-1); text-transform:uppercase; margin-top:0.15rem; }
+.pcard .glow{ position:absolute; inset:0; border-radius:16px; opacity:0; pointer-events:none; transition:opacity .35s; background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(168,255,0,0.15), transparent 60%); }
+.pcard:hover .glow{ opacity:1; }
+
+/* ============================= SECTION OVERLAY ============================= */
+.overlay{
+  position:fixed; inset:0; z-index:50; background:rgba(5,5,5,0.97);
+  backdrop-filter:blur(10px);
+  display:flex; flex-direction:column;
+  opacity:0; visibility:hidden; transform:scale(0.98);
+  transition:opacity .5s var(--ease), transform .5s var(--ease), visibility .5s var(--ease);
+  overflow-y:auto;
+}
+.overlay.open{ opacity:1; visibility:visible; transform:scale(1); }
+.overlay-inner{ max-width:920px; margin:0 auto; width:100%; padding:6.5rem 1.4rem 5rem; flex:1; }
+.overlay-close{
+  position:fixed; top:1.4rem; right:clamp(1.2rem,4vw,3rem); z-index:55;
+  font-family:var(--mono); font-size:0.75rem; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--text-1); border:1px solid var(--border); padding:0.6rem 1.1rem; border-radius:999px;
+  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s, color .3s, border-color .3s;
+}
+.overlay-close.show{ opacity:1; visibility:visible; }
+.overlay-close:hover{ color:var(--green); border-color:var(--green); }
+
+.sec-eyebrow{ font-family:var(--mono); font-size:0.75rem; letter-spacing:0.3em; color:var(--purple); text-transform:uppercase; margin-bottom:0.8rem; }
+.sec-title{ font-size:clamp(2rem,6vw,3.6rem); margin-bottom:1.6rem; }
+.sec-title .g{ color:var(--green); }
+
+/* PROFILE */
+.profile-body p{ color:var(--text-1); font-size:1.05rem; line-height:1.75; max-width:60ch; margin-bottom:1.2rem; }
+.profile-loc{ font-family:var(--mono); font-size:0.8rem; letter-spacing:0.12em; color:var(--text-0); margin-top:1.5rem; }
+
+/* SKILLS */
+.skill-groups{ display:flex; flex-direction:column; gap:2.2rem; margin-top:1rem; }
+.skill-group h3{ font-family:var(--mono); font-size:0.8rem; letter-spacing:0.2em; color:var(--text-1); text-transform:uppercase; margin-bottom:1rem; font-weight:500; }
+.skill-tags{ display:flex; flex-wrap:wrap; gap:0.6rem; }
+.skill-tag{
+  border:1px solid var(--border); border-radius:10px; padding:0.65rem 1rem;
+  font-size:0.88rem; display:flex; align-items:center; gap:0.6rem;
+  transition:border-color .3s, transform .3s;
+}
+.skill-tag:hover{ border-color:var(--green); transform:translateY(-3px); }
+.skill-status{ font-family:var(--mono); font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; padding:0.15rem 0.45rem; border-radius:5px; }
+.skill-status.working{ background:rgba(168,255,0,0.12); color:var(--green); }
+.skill-status.exploring{ background:rgba(122,46,255,0.18); color:#c6a4ff; }
+.skill-status.foundational{ background:rgba(255,255,255,0.08); color:var(--text-1); }
+
+/* PROJECTS */
+.project-hero{ border:1px solid var(--border); border-radius:18px; padding:2rem; margin-top:1rem; background:linear-gradient(160deg, rgba(122,46,255,0.06), transparent 60%); position:relative; overflow:hidden; }
+.project-hero .ptag{ font-family:var(--mono); font-size:0.7rem; letter-spacing:0.2em; color:var(--green); text-transform:uppercase; margin-bottom:0.5rem; }
+.project-hero h3{ font-size:clamp(1.8rem,5vw,2.6rem); margin-bottom:0.5rem; }
+.project-hero .ptagline{ font-family:var(--mono); color:var(--text-1); font-size:0.85rem; letter-spacing:0.05em; margin-bottom:1.2rem; }
+.project-hero p.desc{ color:var(--text-1); line-height:1.7; max-width:65ch; margin-bottom:1.4rem; }
+.status-pill{ display:inline-block; font-family:var(--mono); font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; border:1px solid var(--border); border-radius:999px; padding:0.35rem 0.9rem; color:var(--text-1); margin-bottom:1.2rem; }
+.tech-row{ display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1.4rem; }
+.tech-chip{ font-family:var(--mono); font-size:0.75rem; border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.6rem; color:var(--text-0); }
+.proj-links{ display:flex; gap:0.9rem; flex-wrap:wrap; }
+.proj-btn{ border:1px solid var(--green); color:var(--green); border-radius:999px; padding:0.6rem 1.3rem; font-family:var(--mono); font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; transition:.3s; }
+.proj-btn:hover{ background:var(--green); color:#050505; }
+
+/* nutri code scan sequence */
+.scan-stage{ margin-top:2.2rem; border:1px solid var(--border); border-radius:18px; padding:2rem 1.4rem; text-align:center; position:relative; overflow:hidden; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.scan-box{ width:120px; height:170px; border:1px solid rgba(255,255,255,0.25); border-radius:10px; position:relative; margin-bottom:1.6rem; background:linear-gradient(160deg,#0e0713,#1a0c22); }
+.scan-beam{ position:absolute; left:0; right:0; height:2px; background:var(--green); box-shadow:0 0 14px var(--green); top:0; animation:beam 2.2s linear infinite; }
+@keyframes beam{ 0%{ top:4%; } 50%{ top:92%; } 100%{ top:4%; } }
+.scan-layers{ display:flex; flex-wrap:wrap; gap:0.6rem; justify-content:center; max-width:520px; }
+.scan-layer{
+  font-family:var(--mono); font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase;
+  border:1px solid var(--border); border-radius:999px; padding:0.5rem 1rem; color:var(--text-1);
+  opacity:0; transform:translateY(10px); transition:opacity .5s var(--ease), transform .5s var(--ease), color .3s, border-color .3s;
+}
+.scan-layer.in{ opacity:1; transform:translateY(0); color:var(--text-0); border-color:rgba(168,255,0,0.35); }
+
+/* EDUCATION */
+.edu-file{ border:1px solid var(--border); border-radius:16px; padding:2rem; font-family:var(--mono); margin-top:1rem; }
+.edu-row{ display:flex; justify-content:space-between; gap:1rem; padding:0.9rem 0; border-bottom:1px dashed var(--border); font-size:0.9rem; flex-wrap:wrap; }
+.edu-row:last-child{ border-bottom:none; }
+.edu-row .k{ color:var(--text-1); letter-spacing:0.15em; text-transform:uppercase; font-size:0.72rem; }
+.edu-row .v{ color:var(--text-0); text-align:right; }
+
+/* CERTS */
+.cert-empty{ border:1px dashed var(--border); border-radius:16px; padding:3rem 1.4rem; text-align:center; margin-top:1rem; }
+.cert-empty h3{ font-size:1.6rem; color:var(--text-1); margin-bottom:0.6rem; }
+.cert-empty p{ font-family:var(--mono); font-size:0.8rem; color:var(--text-1); letter-spacing:0.05em; }
+
+/* CONTACT */
+.contact-list{ display:flex; flex-direction:column; gap:0; margin-top:1.4rem; border-top:1px solid var(--border); }
+.contact-row{ display:flex; justify-content:space-between; align-items:center; padding:1.2rem 0.2rem; border-bottom:1px solid var(--border); transition:padding-left .3s var(--ease); }
+.contact-row:hover{ padding-left:0.6rem; }
+.contact-row .k{ font-family:var(--mono); font-size:0.72rem; letter-spacing:0.2em; color:var(--text-1); text-transform:uppercase; }
+.contact-row .v{ font-size:1.05rem; }
+.contact-row a.v:hover{ color:var(--green); }
+.final-note{ margin-top:3.5rem; text-align:center; }
+.final-note h3{ font-size:clamp(1.6rem,5vw,2.4rem); color:var(--text-1); }
+.final-note h3 .g{ color:var(--green); }
+.final-note p{ font-family:var(--mono); font-size:0.78rem; color:var(--text-1); letter-spacing:0.06em; margin-top:0.6rem; }
+
+footer{ position:relative; z-index:5; text-align:center; padding:2.6rem 1rem 3rem; font-family:var(--mono); font-size:0.72rem; color:var(--text-1); letter-spacing:0.15em; }
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
+
+@media (max-width:640px){
+  .deck-grid{ grid-template-columns:repeat(2,1fr); gap:0.9rem; }
+  .pcard{ padding:1rem; }
+  .pcard .center-glyph{ font-size:2.1rem; }
+  .overlay-inner{ padding-top:5.5rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas" aria-hidden="true"></canvas>
+<div class="noise-overlay" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="haha-field" id="hahaField" aria-hidden="true"></div>
+<div id="haha-burst" aria-hidden="true">
+  <div class="line1" id="burstLine1">HAHAHAHA...</div>
+  <div class="line2" id="burstLine2">PICK A CARD.</div>
+</div>
+
+<!-- ============================= BOOT SEQUENCE ============================= -->
+<div id="boot" role="dialog" aria-label="Intro sequence">
+  <button class="skip-boot" id="skipBoot">Skip intro →</button>
+
+  <div class="boot-step active" data-step="0">
+    <p class="system-line">SYSTEM UNKNOWN.</p>
+  </div>
+
+  <div class="boot-step" data-step="1">
+    <p class="laugh">HAHAHAHAHAHAHAHA</p>
+  </div>
+
+  <div class="boot-step" data-step="2">
+    <div class="pick-card-wrap">
+      <div id="pick-card" tabindex="0" role="button" aria-label="Pick a card to reveal identity">
+        <div class="front-face">
+          <span class="corner tl">JF</span>
+          <span class="pick-label">PICK A<br>CARD</span>
+          <span class="corner br">JF</span>
+        </div>
+        <div class="reveal-back">
+          <span style="font-family:var(--mono); font-size:0.65rem; letter-spacing:0.2em; color:var(--green);">IDENTITY CONFIRMED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="boot-step" data-step="3">
+    <div class="identity-reveal show">
+      <h1>KHAJA<br><em>FAIZAN</em></h1>
+      <div class="identity-meta">
+        <span>CSE / AI &amp; ML</span>
+        <span>WARANGAL, INDIA</span>
+        <span>ENGINEERING STUDENT</span>
+      </div>
+      <button class="enter-btn" id="enterDeck">Enter the deck</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= MAIN SITE ============================= -->
+<div id="site">
+  <header class="topbar">
+    <div class="brand">KF<em>.</em></div>
+    <div class="tagline-small">Every system has a wild card.</div>
+  </header>
+
+  <main>
+    <section class="deck-hero">
+      <p class="eyebrow">The Wild Card</p>
+      <h2>Six cards.<br>One <span class="accent">engineering student</span> chasing systems that surprise him.</h2>
+      <p class="sub">Pick a card below to open a section — profile, skills, projects, education, certifications, or a way to reach me.</p>
+      <p class="scroll-hint">↓ CHOOSE A CARD ↓</p>
+    </section>
+
+    <section class="deck-wrap">
+      <div class="deck-grid" id="deckGrid"></div>
+    </section>
+  </main>
+
+  <footer>KHAJA FAIZAN — HYDERABAD REGION, INDIA — © <span id="year"></span></footer>
+</div>
+
+<!-- ============================= OVERLAYS ============================= -->
+<button class="overlay-close" id="overlayClose">Close ✕</button>
+<div class="overlay" id="overlay">
+  <div class="overlay-inner" id="overlayInner"></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from "three";
+
+/* ============================================================
+   CENTRALIZED DATA — edit here only. Nothing below is invented
+   beyond what was supplied in the brief.
+============================================================ */
+const DATA = {
+  profile: {
+    name: "Khaja Faizan",
+    role: "AI & ML Engineering Student",
+    location: "Warangal, Telangana, India",
+    bio: [
+      "I'm a CSE student focused on AI & ML — I like taking a system apart to see why it behaves the way it does, then rebuilding the part that matters.",
+      "Most of what I build starts as a small, honest question: can this be understood better, or chosen better, with the right data in front of it. Nutri Code came out of exactly that question."
+    ]
+  },
+  education: {
+    degree: "B.Tech — CSE / AI & ML",
+    institution: "[COLLEGE NAME]",
+    period: "[START YEAR — END YEAR]",
+    status: "BUILDING KNOWLEDGE"
+  },
+  skills: [
+    { group: "Programming", items: [
+      { name:"Python", status:"working" }, { name:"Java", status:"working" },
+      { name:"JavaScript", status:"working" }, { name:"TypeScript", status:"exploring" }
+    ]},
+    { group: "AI / ML", items: [
+      { name:"Machine Learning", status:"working" }, { name:"Generative AI", status:"exploring" },
+      { name:"LLM Applications", status:"exploring" }, { name:"Data Analysis", status:"working" },
+      { name:"Scikit-learn", status:"working" }, { name:"XGBoost", status:"exploring" }
+    ]},
+    { group: "Web / Software", items: [
+      { name:"React", status:"working" }, { name:"Next.js", status:"exploring" },
+      { name:"Tailwind CSS", status:"working" }, { name:"FastAPI", status:"exploring" }
+    ]},
+    { group: "Data / Backend", items: [
+      { name:"SQL", status:"working" }, { name:"PostgreSQL", status:"exploring" },
+      { name:"Supabase", status:"exploring" }, { name:"REST APIs", status:"working" }
+    ]},
+    { group: "Tools", items: [
+      { name:"Git", status:"working" }, { name:"GitHub", status:"working" }, { name:"Vercel", status:"exploring" }
+    ]}
+  ],
+  projects: [
+    {
+      title: "Nutri Code",
+      category: "Health-tech / Applied AI",
+      tagline: "Scan. Understand. Choose better.",
+      description: "Nutri Code scans a food product's barcode and surfaces what's actually in it — preservatives, additives, and ingredients worth a second look — alongside dietary-preference information and an overall health score. It's built to inform a choice, not to diagnose anything.",
+      status: "In development",
+      technologies: ["Python", "Machine Learning", "Barcode Scanning", "React"],
+      githubUrl: "",
+      liveUrl: "",
+      images: [],
+      features: [
+        "Barcode detection",
+        "Ingredient analysis",
+        "Additives & preservatives flagging",
+        "Dietary information",
+        "Health score"
+      ]
+    }
+  ],
+  certifications: [],
+  contact: {
+    email: "khajafaizan936@gmaill.com",
+    phone: "7675809487",
+    github: "",
+    linkedin: "",
+    resume: ""
+  }
+};
+
+/* ============================================================
+   HAHAHAHAHA — dramatic transition lines (never identical twice in a row)
+============================================================ */
+const HAHA_LINES = [
+  ["HAHAHAHA...", "ANOTHER SYSTEM REVEALED."],
+  ["HAHAHAHA...", "YOU FOUND THE PROJECT."],
+  ["HAHAHAHA...", "FILE OPENED."],
+  ["HAHAHAHA...", "NEXT CARD."],
+];
+let lastHaha = -1;
+function burstHaha(customLine2){
+  const el = document.getElementById('haha-burst');
+  const l1 = document.getElementById('burstLine1');
+  const l2 = document.getElementById('burstLine2');
+  let idx = Math.floor(Math.random()*HAHA_LINES.length);
+  if(idx === lastHaha) idx = (idx+1) % HAHA_LINES.length;
+  lastHaha = idx;
+  l1.textContent = HAHA_LINES[idx][0];
+  l2.textContent = customLine2 || HAHA_LINES[idx][1];
+  el.classList.add('active');
+  setTimeout(()=> el.classList.remove('active'), 620);
+}
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   BOOT SEQUENCE
+============================================================ */
+const boot = document.getElementById('boot');
+const steps = [...boot.querySelectorAll('.boot-step')];
+let stepIdx = 0;
+function showStep(i){
+  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+}
+function finishBoot(){
+  boot.classList.add('hidden');
+  document.getElementById('skipBoot').style.display='none';
+  document.getElementById('site').classList.add('ready');
+  setTimeout(()=> document.getElementById('hahaField').classList.add('show'), 300);
+}
+
+if(reduceMotion){
+  finishBoot();
+} else {
+  setTimeout(()=>{ stepIdx=1; showStep(1); }, 1600);
+  setTimeout(()=>{ stepIdx=2; showStep(2); }, 3200);
+}
+
+document.getElementById('skipBoot').addEventListener('click', finishBoot);
+
+const pickCard = document.getElementById('pick-card');
+function pickCardAction(){
+  if(pickCard.classList.contains('flipped')) return;
+  pickCard.classList.add('flipped');
+  burstHaha("IDENTITY CONFIRMED.");
+  setTimeout(()=>{ showStep(3); }, 550);
+}
+pickCard.addEventListener('click', pickCardAction);
+pickCard.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pickCardAction(); } });
+
+document.getElementById('enterDeck').addEventListener('click', finishBoot);
+
+/* ============================================================
+   AMBIENT HAHAHAHAHA FIELD (sparse, scattered, low opacity)
+============================================================ */
+const fragments = ["HA","HAHA","HAHAHA","HAHAHAHA"];
+const hahaField = document.getElementById('hahaField');
+if(!reduceMotion){
+  for(let i=0;i<7;i++){
+    const s = document.createElement('span');
+    s.textContent = fragments[Math.floor(Math.random()*fragments.length)];
+    s.style.top = (Math.random()*90)+'vh';
+    s.style.left = (Math.random()*85)+'vw';
+    s.style.fontSize = (1.4+Math.random()*3.2)+'rem';
+    s.style.transform = `rotate(${(Math.random()*30-15).toFixed(1)}deg)`;
+    hahaField.appendChild(s);
+  }
+}
+
+/* ============================================================
+   THREE.JS BACKGROUND — floating cards, particles, fog
+============================================================ */
+const canvas = document.getElementById('bg-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x050505, 0.035);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0,0,12);
+
+const ambient = new THREE.AmbientLight(0x3a124c, 1.1);
+scene.add(ambient);
+const point1 = new THREE.PointLight(0x7a2eff, 3, 30);
+point1.position.set(5,4,6);
+scene.add(point1);
+const point2 = new THREE.PointLight(0xa8ff00, 1.3, 30);
+point2.position.set(-6,-3,4);
+scene.add(point2);
+
+const isMobile = window.innerWidth < 700;
+const cardCount = isMobile ? 8 : 16;
+const cardGeo = new THREE.PlaneGeometry(1.1, 1.6);
+const cardMat = new THREE.MeshStandardMaterial({
+  color:0x120616, emissive:0x3a124c, emissiveIntensity:0.35,
+  roughness:0.5, metalness:0.2, side:THREE.DoubleSide, transparent:true, opacity:0.85
+});
+const cards = [];
+for(let i=0;i<cardCount;i++){
+  const m = new THREE.Mesh(cardGeo, cardMat.clone());
+  m.position.set((Math.random()-0.5)*16, (Math.random()-0.5)*10, (Math.random()-0.5)*10-4);
+  m.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+  m.userData.speed = 0.05 + Math.random()*0.12;
+  m.userData.axis = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize();
+  scene.add(m);
+  cards.push(m);
+}
+
+// particle field
+const particleCount = isMobile ? 250 : 700;
+const particleGeo = new THREE.BufferGeometry();
+const positions = new Float32Array(particleCount*3);
+for(let i=0;i<particleCount;i++){
+  positions[i*3] = (Math.random()-0.5)*30;
+  positions[i*3+1] = (Math.random()-0.5)*20;
+  positions[i*3+2] = (Math.random()-0.5)*20-4;
+}
+particleGeo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+const particleMat = new THREE.PointsMaterial({ color:0xa8ff00, size:0.02, transparent:true, opacity:0.5 });
+const particles = new THREE.Points(particleGeo, particleMat);
+scene.add(particles);
+
+let mouseX=0, mouseY=0;
+window.addEventListener('mousemove', (e)=>{
+  mouseX = (e.clientX/window.innerWidth - 0.5);
+  mouseY = (e.clientY/window.innerHeight - 0.5);
+});
+
+function onResize(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener('resize', onResize);
+
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = reduceMotion ? 0 : clock.getDelta();
+  cards.forEach(c=>{
+    c.rotateOnAxis(c.userData.axis, c.userData.speed*dt*0.6);
+    c.position.y += Math.sin(clock.elapsedTime*0.4 + c.id)*0.0008;
+  });
+  particles.rotation.y += dt*0.008;
+  camera.position.x += (mouseX*1.4 - camera.position.x)*0.02;
+  camera.position.y += (-mouseY*1.0 - camera.position.y)*0.02;
+  camera.lookAt(0,0,0);
+  renderer.render(scene, camera);
+}
+animate();
+
+/* ============================================================
+   CARD DECK — build cards from data, section metadata
+============================================================ */
+const SECTION_META = [
+  { id:'joker', suit:'🃏', suitClass:'purple', rank:'THE JOKER', name:'Profile', label:'Introduction' },
+  { id:'ace',   suit:'♠',  suitClass:'', rank:'ACE OF SPADES', name:'Skills', label:'What I work with' },
+  { id:'king',  suit:'♥',  suitClass:'red', rank:'KING OF HEARTS', name:'Projects', label:'Selected work' },
+  { id:'queen', suit:'♦',  suitClass:'red', rank:'QUEEN OF DIAMONDS', name:'Education', label:'Academic file' },
+  { id:'jack',  suit:'♣',  suitClass:'', rank:'JACK OF CLUBS', name:'Certifications', label:'Evidence & achievements' },
+  { id:'wild',  suit:'🃏', suitClass:'green', rank:'THE WILD CARD', name:'Contact', label:'Reach me' },
+];
+
+const deckGrid = document.getElementById('deckGrid');
+SECTION_META.forEach(meta=>{
+  const el = document.createElement('div');
+  el.className = 'pcard';
+  el.tabIndex = 0;
+  el.setAttribute('role','button');
+  el.setAttribute('aria-label', `Open ${meta.name} section`);
+  el.dataset.section = meta.id;
+  el.innerHTML = `
+    <div class="glow"></div>
+    <div class="rank-row"><span class="suit ${meta.suitClass}">${meta.suit}</span><span class="rank">${meta.rank}</span></div>
+    <div class="center-glyph">${meta.suit}</div>
+    <div>
+      <div class="cardname">${meta.name}</div>
+      <div class="cardlabel">${meta.label}</div>
+    </div>
+  `;
+  deckGrid.appendChild(el);
+
+  // tilt interaction
+  el.addEventListener('mousemove', (e)=>{
+    if(reduceMotion) return;
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left)/r.width;
+    const py = (e.clientY - r.top)/r.height;
+    const rx = (py-0.5)*-14;
+    const ry = (px-0.5)*14;
+    el.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px) scale(1.02)`;
+    el.style.setProperty('--mx', (px*100)+'%');
+    el.style.setProperty('--my', (py*100)+'%');
+  });
+  el.addEventListener('mouseleave', ()=>{ el.style.transform=''; });
+  el.addEventListener('click', ()=> openSection(meta.id));
+  el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openSection(meta.id); } });
+});
+
+/* ============================================================
+   SECTION CONTENT RENDERERS
+============================================================ */
+function renderProfile(){
+  return `
+    <p class="sec-eyebrow">The Joker · Profile</p>
+    <h2 class="sec-title">${DATA.profile.name}, <span class="g">${DATA.profile.role}</span></h2>
+    <div class="profile-body">
+      ${DATA.profile.bio.map(p=>`<p>${p}</p>`).join('')}
+      <p class="profile-loc">📍 ${DATA.profile.location}</p>
+    </div>
+  `;
+}
+
+function renderSkills(){
+  const groups = DATA.skills.map(g=>`
+    <div class="skill-group">
+      <h3>${g.group}</h3>
+      <div class="skill-tags">
+        ${g.items.map(it=>`<span class="skill-tag">${it.name} <span class="skill-status ${it.status}">${it.status}</span></span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  return `
+    <p class="sec-eyebrow">Ace of Spades · Skills</p>
+    <h2 class="sec-title">Tools I reach for <span class="g">right now.</span></h2>
+    <div class="skill-groups">${groups}</div>
+  `;
+}
+
+function renderProjects(){
+  const cardsHtml = DATA.projects.map(p=>{
+    const links = [];
+    if(p.githubUrl) links.push(`<a class="proj-btn" href="${p.githubUrl}" target="_blank" rel="noopener">Source code</a>`);
+    if(p.liveUrl) links.push(`<a class="proj-btn" href="${p.liveUrl}" target="_blank" rel="noopener">Live demo</a>`);
+    const isNutri = p.title.toLowerCase().includes('nutri');
+    return `
+      <div class="project-hero">
+        <p class="ptag">${p.category}</p>
+        <h3>${p.title}</h3>
+        <p class="ptagline">${p.tagline}</p>
+        <span class="status-pill">${p.status}</span>
+        <p class="desc">${p.description}</p>
+        <div class="tech-row">${p.technologies.map(t=>`<span class="tech-chip">${t}</span>`).join('')}</div>
+        ${links.length ? `<div class="proj-links">${links.join('')}</div>` : `<div class="proj-links"><span class="tech-chip">No public link yet</span></div>`}
+        ${isNutri ? renderNutriScan(p) : ''}
+      </div>
+    `;
+  }).join('');
+  return `
+    <p class="sec-eyebrow">King of Hearts · Selected work</p>
+    <h2 class="sec-title">Projects, <span class="g">honestly labeled.</span></h2>
+    ${cardsHtml}
+  `;
+}
+
+function renderNutriScan(p){
+  return `
+    <div class="scan-stage">
+      <div class="scan-box"><div class="scan-beam"></div></div>
+      <div class="scan-layers" id="scanLayers">
+        ${p.features.map((f,i)=>`<span class="scan-layer" style="transition-delay:${i*0.18}s">${f.toUpperCase()}</span>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderEducation(){
+  const e = DATA.education;
+  return `
+    <p class="sec-eyebrow">Queen of Diamonds · Education</p>
+    <h2 class="sec-title">Education <span class="g">file.</span></h2>
+    <div class="edu-file">
+      <div class="edu-row"><span class="k">Degree</span><span class="v">${e.degree}</span></div>
+      <div class="edu-row"><span class="k">Institution</span><span class="v">${e.institution}</span></div>
+      <div class="edu-row"><span class="k">Period</span><span class="v">${e.period}</span></div>
+      <div class="edu-row"><span class="k">Status</span><span class="v">${e.status}</span></div>
+    </div>
+  `;
+}
+
+function renderCertifications(){
+  if(!DATA.certifications.length){
+    return `
+      <p class="sec-eyebrow">Jack of Clubs · Certifications</p>
+      <h2 class="sec-title">Evidence <span class="g">on file.</span></h2>
+      <div class="cert-empty">
+        <h3>MORE CARDS COMING SOON.</h3>
+        <p>Nothing fabricated, nothing padded — this card fills in as certifications are earned.</p>
+      </div>
+    `;
+  }
+  const rows = DATA.certifications.map(c=>`
+    <div class="edu-row"><span class="k">${c.name}</span><span class="v">${c.issuer} · ${c.year}</span></div>
+  `).join('');
+  return `
+    <p class="sec-eyebrow">Jack of Clubs · Certifications</p>
+    <h2 class="sec-title">Evidence <span class="g">on file.</span></h2>
+    <div class="edu-file">${rows}</div>
+  `;
+}
+
+function renderContact(){
+  const c = DATA.contact;
+  const rows = [
+    { k:'Email', v:c.email, href:`mailto:${c.email}` },
+    { k:'Phone', v:c.phone, href:`tel:${c.phone.replace(/\s+/g,'')}` },
+  ];
+  if(c.github) rows.push({ k:'GitHub', v:c.github.replace(/^https?:\/\//,''), href:c.github });
+  if(c.linkedin) rows.push({ k:'LinkedIn', v:c.linkedin.replace(/^https?:\/\//,''), href:c.linkedin });
+  if(c.resume) rows.push({ k:'Resume', v:'Download PDF', href:c.resume });
+
+  return `
+    <p class="sec-eyebrow">The Wild Card · Contact</p>
+    <h2 class="sec-title">Want to see <span class="g">what's next?</span></h2>
+    <div class="contact-list">
+      ${rows.map(r=>`<div class="contact-row"><span class="k">${r.k}</span><a class="v" href="${r.href}" target="_blank" rel="noopener">${r.v}</a></div>`).join('')}
+    </div>
+    <div class="final-note">
+      <h3>THE DECK <span class="g">NEVER ENDS.</span></h3>
+      <p>More projects. More experiments. More to build. — Khaja Faizan</p>
+    </div>
+  `;
+}
+
+const RENDERERS = {
+  joker: renderProfile,
+  ace: renderSkills,
+  king: renderProjects,
+  queen: renderEducation,
+  jack: renderCertifications,
+  wild: renderContact,
+};
+
+/* ============================================================
+   OPEN / CLOSE OVERLAY
+============================================================ */
+const overlay = document.getElementById('overlay');
+const overlayInner = document.getElementById('overlayInner');
+const overlayClose = document.getElementById('overlayClose');
+let lastFocused = null;
+
+function openSection(id){
+  lastFocused = document.activeElement;
+  overlayInner.innerHTML = RENDERERS[id]();
+  overlay.classList.add('open');
+  overlayClose.classList.add('show');
+  burstHaha();
+  overlayInner.scrollTop = 0;
+  overlay.scrollTop = 0;
+
+  if(id === 'king' && !reduceMotion){
+    setTimeout(()=>{
+      document.querySelectorAll('.scan-layer').forEach(l=> l.classList.add('in'));
+    }, 250);
+  }
+  overlayClose.focus();
+}
+function closeSection(){
+  overlay.classList.remove('open');
+  overlayClose.classList.remove('show');
+  if(lastFocused) lastFocused.focus();
+}
+overlayClose.addEventListener('click', closeSection);
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && overlay.classList.contains('open')) closeSection();
+});
+
+/* footer year */
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
